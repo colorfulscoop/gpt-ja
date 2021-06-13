@@ -2,22 +2,13 @@
 language: ja
 datasets: wikipedia
 widget:
-- text: "近年の機械学習は"
+- text: "統計的推定を使うことで、"
 license: cc-by-sa-3.0
 ---
 
 # GPT-2 small Japanese model
 
 This repository contains a pretrained SentencePiece tokenizer model and GPT-2 small model trained on Japanese Wikipedia dataset.
-
-## Versions
-
-| Version | Commit hash |
-| --- | --- |
-| latest | - |
-| v1 | 697bc10 |
-
-All models are using the same tokenizer model.
 
 ## Training data
 
@@ -63,8 +54,8 @@ Then load the pretrained tokenizer and GPT-2 model, and call a `generate` method
 
 ```sh
 >>> import transformers, torch
->>> tokenizer = transformers.AutoTokenizer.from_pretrained("output/model")
->>> model = transformers.AutoModelForCausalLM.from_pretrained("output/model")
+>>> tokenizer = transformers.AutoTokenizer.from_pretrained("colorfulscoop/gpt2-small-ja")
+>>> model = transformers.AutoModelForCausalLM.from_pretrained("colorfulscoop/gpt2-small-ja")
 >>> input = tokenizer.encode("統計的推定を使うことで、", return_tensors="pt")
 >>> output = model.generate(input, do_sample=True, top_p=0.95, top_k=50, num_return_sequences=3)
 >>> tokenizer.batch_decode(output)
@@ -72,6 +63,21 @@ Then load the pretrained tokenizer and GPT-2 model, and call a `generate` method
 ```
 
 **Note:** The default model configuration `config.json` sets some generation parameters with `do_sample=True`, `top_k=50`, `top_p=0.95`. Please reset these parameters when you need to set different parameters.
+
+## Versions
+
+| Version | Commit hash |
+| --- | --- |
+| latest | main |
+| v1 | 697bc101c1bb775d8635509f54e66b51d633fd94 |
+
+All models are using the same tokenizer model.
+
+```sh
+>>> import transformers
+>>> tokenizer = transformers.AutoTokenizer.from_pretrained("colorfulscoop/gpt2-small-ja")
+>>> model = transformers.AutoModelForCausalLM.from_pretrained("colorfulscoop/gpt2-small-ja", revision="697bc101c1bb775d8635509f54e66b51d633fd94")
+```
 
 ## License
 
