@@ -2,7 +2,7 @@
 
 ## [latest - will be released as v2]
 
-### 20210613
+### 2021-06-13
 #### Modified
 - neural network library from TensorFlow to PyTorch
 - Update library version (transformers: 4.3.3 -> 4.4.2, sentencepiece: 0.1.91 -> 0.1.95)

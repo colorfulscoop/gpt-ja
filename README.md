@@ -3,6 +3,8 @@
 This repository summarizes how the GPT-2 model of HuggingFace's transformers library is trained on Japanese Wikipedia.
 This repository currently contains codes only for small size model.
 
+Models are avaialble in https://huggingface.co/colorfulscoop/gpt2-small-ja .
+
 ## Training
 
 Create a new directory and clone a repository.
