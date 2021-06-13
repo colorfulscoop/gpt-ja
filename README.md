@@ -5,23 +5,21 @@ This repository currently contains codes only for small size model.
 
 ## Training
 
-Create a new directory to train models.
+Create a new directory and clone a repository.
 
 ```sh
 $ mkdir -p experiment/small/v2/
-$ cp get_jawiki.sh experiment/small/v2
 $ cd experiment/small/v2/
-```
-
-### Clone training script
-
-```sh
 $ git clone https://github.com/colorfulscoop/convmodel
 $ cd convmodel/examples/language_modeling/
 $ git checkout e410b3
 ```
 
 ### Prepare data
+
+```sh
+$ cp ../../../../../../get_jawiki.sh .
+```
 
 ```sh
 $ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buster bash
@@ -96,7 +94,6 @@ DATALOADER:0 TEST RESULTS
 Validation loss curve:
 
 ![Validation loss curve](experiment/small/v2/val_loss_curve.png)
-
 
 ## Usage
 

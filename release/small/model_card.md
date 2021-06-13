@@ -34,13 +34,14 @@ After training, the model is imported to `transformers.BERTGenerationTokenizer` 
 
 The model is trained on the train split for 30 epochs with batch size 32 and 1024 tokens for each sample (i.e. 32,768 tokens are processed in each batch).
 Each epoch contains around 16,000 steps.
-Adam optimizer is used. The learning rate is linearly decreased from `1e-4` to `0`. A clip norm is also used to set to `1.0`.
+Adam optimizer is used. The learning rate linearly increased from `0` to `1e-4` in first 10,000 steps, then decreased to `0`.
+A clip norm is also used to set to `1.0`.
 
 Trainind was conducted on Ubuntu 18.04.5 LTS with one RTX 2080 Ti.
 
 After training completed, test set PPL was reached to 28.47.
 
-All the code to train tokenizer and GPT-2 models are available in [a repository on GitHub](https://github.com/colorfulscoop/tfdlg/tree/8d068f4cc3fac49555971ad8244a540587745d79/examples/transformers-gpt2-ja)
+All the code to train tokenizer and GPT-2 models are available in [a GitHub repository](https://github.com/colorfulscoop/gpt2-ja).
 
 ## Usage
 
@@ -71,7 +72,9 @@ Then load the pretrained tokenizer and GPT-2 model, and call a `generate` method
 | latest | main |
 | v1 | 697bc101c1bb775d8635509f54e66b51d633fd94 |
 
-All models are using the same tokenizer model.
+All models are using the same tokenizer model as v1.
+If you use a previous model, please specify the corresponded revision to `AutoModelForCausalLM.from_pretrained` method.
+
 
 ```sh
 >>> import transformers
