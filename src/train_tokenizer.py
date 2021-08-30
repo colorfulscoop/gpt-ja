@@ -5,10 +5,9 @@ import transformers
 
 def main(
     train_file,
-    spm_model_dir="output/spm",
-    tf_model_dir="output/model",
+    model_dir,
     vocab_size=32000,
-    input_sentence_size=10000000,
+    input_sentence_size=1000000,
     add_dummy_prefix=False,
     sep_token="<sep>",
     cls_token="<cls>",
@@ -17,7 +16,7 @@ def main(
     bos_token="<s>",
     eos_token="</s>",
 ):
-    spm_model_dir = Path(spm_model_dir)
+    spm_model_dir = Path(Path(model_dir) / Path("spm"))
     spm_model_prefix = Path(spm_model_dir) / Path("sp")
     spm_model_path = Path(spm_model_dir) / Path("sp.model")
 
@@ -53,7 +52,7 @@ def main(
         unk_token=unk_token,
     )
     print(len(tokenizer))
-    tokenizer.save_pretrained(tf_model_dir)
+    tokenizer.save_pretrained(model_dir)
 
 
 if __name__ == "__main__":
