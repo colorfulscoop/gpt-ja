@@ -6,7 +6,7 @@ Model details are as follows. Please check out more details of each model from e
 
 | Model in 🤗 Model Hub| n_ctx | n_layer | n_head | n_embd |
 | --- | --- | --- | --- | --- |
-| [gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | 1024 | 12 | 12 | 768 |
+| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | 1024 | 12 | 12 | 768 |
 
 Simple usage;
 
