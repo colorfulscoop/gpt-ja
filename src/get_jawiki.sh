@@ -39,9 +39,9 @@ echo "Generate train/valid/test dataset in ${save_dir}"
 cat jawiki-${date}-pages-articles.extractor | \
     grep -v doc | perl -wlp -e 's/。/。\n/g' | \
     perl -wln -e '/^$/ or print' \
-    >${save_dir}/all.txt
+    >all.txt
 
-    head -n500000   ${save_dir}/all.txt                  >${save_dir}/data/valid.txt
-    head -n1000000  ${save_dir}/all.txt | tail -n+500001 >${save_dir}/data/test.txt
-    tail -n+1000001 ${save_dir}/all.txt                  >${save_dir}/data/train.txt
+    head -n500000   all.txt                  >valid.txt
+    head -n1000000  all.txt | tail -n+500001 >test.txt
+    tail -n+1000001 all.txt                  >train.txt
 fi
