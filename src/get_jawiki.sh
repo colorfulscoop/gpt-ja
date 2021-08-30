@@ -1,13 +1,18 @@
 set -eu
 
+# Args
 date=${1}
+outdir=${2}
+
+# Target file prefix
+save_dir=${outdir}/${date}
 target=jawiki-${date}-pages-articles
 
 # Change directory to open2ch workspace
-if [ ! -e jawiki/${date} ]; then
-    mkdir -p jawiki/${date}
+if [ ! -e ${save_dir} ]; then
+    mkdir -p ${save_dir}
 fi
-cd jawiki/${date}
+cd ${save_dir}
 
 # Downlaod dataset
 if [ ! -e ${target}.xml.bz2 ]; then
@@ -28,16 +33,13 @@ if [ ! -e ${out_dir} ]; then
     cat ${out_dir}/AA/* >jawiki-${date}-pages-articles.extractor
 fi
 
-# Go back to the top directory
-cd ../..
-
-target_dir=data/jawiki/${date}
-if [ ! -e ${target_dir} ]; then
-    echo "Generate train/valid/test dataset in ${target_dir}"
-    mkdir -p ${target_dir}/data
-    # Generate train/valid/test data
-    # [Caution] do not shuffle dataset here for train GPT like dataset.
-    cat jawiki/${date}/jawiki-${date}-pages-articles.extractor | grep -v doc | perl -wlp -e 's/。/。\n/g' | perl -wln -e '/^$/ or print' >${target_dir}/all.txt
+echo "Generate train/valid/test dataset in ${target_dir}"
+# Generate train/valid/test data
+# [Caution] do not shuffle dataset here for train GPT like dataset.
+cat jawiki-${date}-pages-articles.extractor | \
+    grep -v doc | perl -wlp -e 's/。/。\n/g' | \
+    perl -wln -e '/^$/ or print' \
+    >${target_dir}/all.txt
 
     head -n500000   ${target_dir}/all.txt                  >${target_dir}/data/valid.txt
     head -n1000000  ${target_dir}/all.txt | tail -n+500001 >${target_dir}/data/test.txt

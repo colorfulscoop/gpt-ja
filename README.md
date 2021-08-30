@@ -1,27 +1,6 @@
 # GPT-2 Japanese model for HuggingFace's transformers
 
-This repository summarizes how the GPT-2 model of HuggingFace's transformers library is trained on Japanese Wikipedia.
-This repository currently contains codes only for small size model.
-
-Models are avaialble in https://huggingface.co/colorfulscoop/gpt2-small-ja .
-
-## Training
-
-Create a new directory and clone a repository.
-
-```sh
-$ mkdir -p experiment/small/v2/
-$ cd experiment/small/v2/
-$ git clone https://github.com/colorfulscoop/convmodel
-$ cd convmodel/examples/language_modeling/
-$ git checkout e410b3
-```
-
-### Prepare data
-
-```sh
-$ cp ../../../../../../get_jawiki.sh .
-```
+## Data preparation
 
 ```sh
 $ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buster bash
@@ -29,16 +8,16 @@ $ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buste
 ```
 
 Check the latest date in the list from https://dumps.wikimedia.org/jawiki/ .
-`20210301` is the latest as of March 15th, 2021.
 
 ```sh
-(container)$ bash get_jawiki.sh 20210301
+(container)$ cd src
+(container)$ bash src/get_jawiki.sh 20210820 input
 ```
 
-Finally generated data can be found under `data` directory.
+Finally generated data can be found under `input` directory.
 
 ```sh
-(container)$ ls data/jawiki/20210301/data/
+(container)$ ls input/20210301
 test.txt  train.txt  valid.txt
 ```
 
@@ -47,8 +26,6 @@ test.txt  train.txt  valid.txt
 ```
 
 ### Train tokenizer
-
-Note: tokenizer was trained only in v1. After v2, the same tokenizer model is used to ensure to keep same tokens.
 
 Train SentencePiece model.
 
@@ -61,154 +38,102 @@ $ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buste
 
 ### Train model
 
-
 Install PyTorch with CUDA 11.1 and dependent packages.
 
 ```sh
 $ docker container run --gpus all --ipc=host --rm -it -v $(pwd):/work -w /work nvidia/cuda:11.1-devel-ubuntu20.04 bash
 (container)$ apt update && apt install -y python3 python3-pip git
 (container)$ pip3 install torch==1.8.1+cu111 -f https://download.pytorch.org/whl/torch_stable.html
-(container)$ pip3 install git+https://github.com/colorfulscoop/convmodel@e410b3
 (container)$ pip3 install -r requirements.txt
 ```
 
-Three models with different settings (with/without scheduler or clipnorm) were trained for v2. Test loss and PPL were calculated only for a best model.
-
-| Case | Command | Valid loss | Test loss | Test PPL |
-| --- | --- | --- | --- | --- |
-| Base | `python3 train.py --tokenizer_model=colorfulscoop/gpt2-small-ja --save_model_dir=model_version_3 --train_file data/jawiki/20210301/data/train.txt --valid_file data/jawiki/20210301/data/valid.txt --shuffle_buffer_size 100000 --gpus=1 --precision=16 --lr=1e-4 --seed=1000 --max_epochs=10 --batch_size 2 --accumulate_grad_batches 16` | 3.418 | - | - |
-| Base+Schedule | `python3 train.py --tokenizer_model=colorfulscoop/gpt2-small-ja --save_model_dir=model_version_4 --train_file data/jawiki/20210301/data/train.txt --valid_file data/jawiki/20210301/data/valid.txt --shuffle_buffer_size 100000 --gpus=1 --precision=16 --lr=1e-4 --seed=1000 --max_epochs=30 --batch_size 2 --accumulate_grad_batches 16 --num_warmup_steps 10000 --num_training_steps 476700` | 3.400 | - | - |
-| Base+Schedule+Clipnorm | `python3 train.py --tokenizer_model=colorfulscoop/gpt2-small-ja --save_model_dir=model_version_5 --train_file data/jawiki/20210301/data/train.txt --valid_file data/jawiki/20210301/data/valid.txt --shuffle_buffer_size 100000 --gpus=1 --precision=16 --lr=1e-4 --seed=1000 --max_epochs=30 --batch_size 2 --accumulate_grad_batches 16 --num_warmup_steps 10000 --num_training_steps 476700 --gradient_clip_val 1.0` | 3.400 | 3.3488 | 28.47 |
-
-Note: training_steps were calculated in advance.
-
-Following command shows how to confirm the test result.
-
 ```sh
-python3 test.py --checkpoint lightning_logs/version_5/checkpoints/epoch\=29-step\=476730.ckpt --model model-version_5-epoch30-schedule-clipnorm --test_file data/jawiki/20210301/data/test.txt --gpus=1 --precision=16
-Testing: 6787it [05:11, 21.78it/s]
---------------------------------------------------------------------------------
-DATALOADER:0 TEST RESULTS
-{'test_loss': 3.348798990249634, 'test_ppl': 28.468521118164062}
---------------------------------------------------------------------------------
+$ python trainer.py --print_config > default_config.yaml
 ```
 
-Validation loss curve:
+### Train
 
-![Validation loss curve](experiment/small/v2/val_loss_curve.png)
+Training script uses [PyTorch Lightning CLI](https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_cli.html).
 
-## Usage
+First, create your config file.
 
 ```sh
-$ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buster bash
-(container)$ pip install transformers==4.4.2 torch==1.8.0 sentencepiece==0.1.95
-(container)$ python
-(container)>>> import transformers, torch
-(container)>>> tokenizer = transformers.AutoTokenizer.from_pretrained("output/model")
-(container)>>> model = transformers.AutoModelForCausalLM.from_pretrained("output/model")
-(container)>>> input = tokenizer.encode("統計的推定を使うことで、", return_tensors="pt")
-(container)>>> output = model.generate(input, do_sample=True, top_p=0.95, top_k=50, num_return_sequences=3)
-(container)>>> tokenizer.batch_decode(output)
-['統計的推定を使うことで、より精密に測定できる場合もある。すなわち、誤差があるか、測定', '統計的推定を使うことで、2億5000万年の間に人類の居住に不可欠な金属元素と', '統計的推定を使うことで、データの正確さによって、推定結果から予測された推定量を決定する']
+$ python trainer.py --print_config > default_config.yaml
 ```
 
-## Upload to model hub
+Second, modify the default_config.yaml file to set up your parameters for training.
+Following parameters are recommended to set up.
 
-### Prepare repository and install git lfs (required only for first time)
+**For trainer parameters:**
 
-Finally, upload the trained model to HuggingFace's model hub.
-Following the [official document](https://huggingface.co/transformers/model_sharing.html), the following process is executed.
+| params | what to set | example |
+| --- | --- | --- |
+| trainer.seed_everything | Set an int value as a seed for reproducibility | 1000 |
+| trainer.max_epochs | Set the number of epochs | 10 |
+| trainer.deterministic | Set true to ensure reproducibility while training on GPU | true |
+| [trainer.precision](https://pytorch-lightning.readthedocs.io/en/stable/advanced/amp.html) | Set 16 for 16-bit training if while training on GPU | 16 |
+| [trainer.accumulate_grad_batches](https://pytorch-lightning.readthedocs.io/en/stable/advanced/training_tricks.html#accumulate-gradients) | Set the number of batches to calculate gradient for updating parameters | 16 |
+| [trainer.gradient_clip_val](https://pytorch-lightning.readthedocs.io/en/stable/advanced/training_tricks.html#gradient-clipping) | Set a value to clip gradient | 1 |
 
-First, create a repository named "gpt2-small-ja" from HuggingFace's website.
+Following setting might be useful when you need to monitor values in TensorBoard:
 
-Then, prepare git lfs. In a MacOS environment, git lfs can be installed as follows.
-
-```sh
-$ brew install git-lfs
-$ git lfs install
-Updated git hooks.
-Git LFS initialized.
+```yaml
+trainer:
+  callbacks:
+    - class_path: pytorch_lightning.callbacks.LearningRateMonitor
+    - class_path: pytorch_lightning.callbacks.GPUStatsMonitor
 ```
 
-### Prepare TensorFlow and Flax models
+**For model parameters:**
+
+The default parameters for GPT2 is for small model. You can specify `model.block_size`, `model.n_layer`, `model.n_head`, `model.n_embd` parameters to change the network size.
+
+| model.tokenizer_model | Set GPT2 tokenizer model on [Hugging Face Model Hub](https://huggingface.co/models) | colorfulscoop/gpt2-small-ja |
+| --- | --- | --- |
+| model.train_file | Set text file for train your language model | data/train.txt |
+| model.valid_file | Set text file for validate your language model | data/valid.txt |
+| model.test_file | Set text file for test your language model | data/test.txt |
+| model.block_size | Set context size of GPT2 model | 1024 |
+| model.n_layer | Set the number of layers of GPT2 model | 12 |
+| model.n_head | Set the number of attention head of GPT2 model | 12 |
+| model.n_embd | Set the embedding dimension of GPT2 model | 768 |
+
+Assume that the modified config file is saved as `config.yaml`
+
+Then run training with the config file:
 
 ```sh
-$ git clone https://huggingface.co/colorfulscoop/gpt2-small-ja release/small/v2
+$ python trainer.py --config config.yaml
 ```
 
-Copy models to a reposiotory directory
+While training, you can check log via TensorBoard
 
 ```sh
-$ cp -r experiment/small/v2/convmodel/examples/language_modeling/model_version_5/pytorch_model.bin release/small/v2/
+docker container run -p 6006:6006 -v $(pwd):/work -w /work --rm -it tensorflow/tensorflow:2.4.1-gpu tensorboard --logdir lightning_logs --host 0.0.0.0
 ```
 
-Then run prepare_models.py script to convert PyTorch model to TensorFlow and Flax models.
+### Test
+
+Once your model is trained, use `test.py` script to measure loss and PPL metrics.
+You can specify a config file and checkpoint which PyTorch Lightning automatically saves.
 
 ```sh
-$ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buster bash
-(container)$ pip install transformers==4.4.2 fire==0.4.0 torch==1.8.0 tensorflow==2.5.0
-(container)$ python prepare_models.py --model release/small/v2
+$ python test.py --config lightning_logs/version_0/config.yaml --ckpt_path lightning_logs/version_0/checkpoints/epoch\=2-step\=8.ckpt
 ```
 
-### Commit
+### Export model
 
-You can notice that the cloned repository already contains `.gitattributes` which identifies which files should be treaded by lfs.
+Finally `export_model.py` exports transformers' models under a directory specified by `--output_dir`.
+This script also saves your tokenizer model.
 
 ```sh
-$ cat gpt2-small-ja/.gitattributes
-*.bin.* filter=lfs diff=lfs merge=lfs -text
-*.lfs.* filter=lfs diff=lfs merge=lfs -text
-*.bin filter=lfs diff=lfs merge=lfs -text
-*.h5 filter=lfs diff=lfs merge=lfs -text
-*.tflite filter=lfs diff=lfs merge=lfs -text
-*.tar.gz filter=lfs diff=lfs merge=lfs -text
-*.ot filter=lfs diff=lfs merge=lfs -text
-*.onnx filter=lfs diff=lfs merge=lfs -text
-*.arrow filter=lfs diff=lfs merge=lfs -text
-*.ftz filter=lfs diff=lfs merge=lfs -text
-*.joblib filter=lfs diff=lfs merge=lfs -text
-*.model filter=lfs diff=lfs merge=lfs -text
-*.msgpack filter=lfs diff=lfs merge=lfs -text
-*.pb filter=lfs diff=lfs merge=lfs -text
-*.pt filter=lfs diff=lfs merge=lfs -text
-*.pth filter=lfs diff=lfs merge=lfs -text
+$ python export_model.py --config lightning_logs/version_0/config.yaml --ckpt_path lightning_logs/version_0/checkpoints/epoch\=2-step\=8.ckpt --output_dir model
 ```
 
-Therefore, without using `git lfs track` command, all the models with above prefixes will be tracked by `git lfs`.
-
-Add models and model cards into the cloned directory.
+This allows you to load your model from transformers library as usual way.
 
 ```sh
-$ cp release/small/model_card.md release/small/v2/README.md
-$ cp release/small/CHANGELOG.md release/small/v2/
+>>> import transformers
+>>> transformers.AutoTokenizer.from_pretrained("model")
+>>> transformers.AutoModelForCausalLM.from_pretrained("model")
 ```
-
-Then, modify `config.json` to specify default generation values by following diff.
-
-```sh
-   "transformers_version": "4.3.3",
-   "unk_token_id": 1,
-   "use_cache": true,
--  "vocab_size": 32000
-+  "vocab_size": 32000,
-+  "top_k": 50,
-+  "top_p": 0.95,
-+  "do_sample": true
- }
- ```
-
-Then, add and commit models and files.
-
-```sh
-$ cd release/small/v2
-$ git add .
-$ git commit -m "Add models and model card"
-```
-
-
-Finally, push the commit to model hub.
-
-```sh
-$ git push origin
-```
-
