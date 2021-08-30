@@ -1,6 +1,30 @@
-# GPT-2 Japanese model for HuggingFace's transformers
+# GPT-2 Japanese model for 🤗 Transformers
 
-## Data preparation
+This repository is for GPT-2 Japanese model trained on Japanese Wikipedia dataset.
+
+Model details are as follows. Please check out more details of each model from each document in Model Hub.
+
+| Model in 🤗 Model Hub| n_ctx | n_layer | n_head | n_embd |
+| --- | --- | --- | --- | --- | --- |
+| [gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | 1024 | 12 | 12 | 768 |
+
+Simple usage;
+
+```sh
+>>> import transformers
+>>> transformers.pipeline(...)
+```
+
+Following document shows how to reproduce model training.
+
+## Training details
+
+Training model was conducted on the following environment.
+
+* OS: Ubuntu 18.04.5 LTS
+* GPU:  RTX 2080 Ti x1
+
+### Data preparation
 
 ```sh
 $ docker container run -w /work -v $(pwd):/work --rm -it python:3.8.6-slim-buster bash
@@ -86,9 +110,10 @@ trainer:
 
 The default parameters for GPT2 is for small model. You can specify `model.block_size`, `model.n_layer`, `model.n_head`, `model.n_embd` parameters to change the network size.
 
-| model.tokenizer_model | Set GPT2 tokenizer model on [Hugging Face Model Hub](https://huggingface.co/models) | colorfulscoop/gpt2-small-ja |
+| Parameter | Description | Example Value |
 | --- | --- | --- |
-| model.train_file | Set text file for train your language model | models/small-v2
+| model.tokenizer_model | Set GPT2 tokenizer model path | models/small-v2/ |
+| model.train_file | Set text file for train your language model | models/small-v2 |
 | model.valid_file | Set text file for validate your language model | input/20210820/valid.txt |
 | model.test_file | Set text file for test your language model | input/20210820/test.txt |
 | model.block_size | Set context size of GPT2 model | 1024 |
@@ -126,10 +151,4 @@ This script also saves your tokenizer model.
 $ python export_model.py --config lightning_logs/version_0/config.yaml --ckpt_path lightning_logs/version_0/checkpoints/epoch\=2-step\=8.ckpt --output_dir model
 ```
 
-This allows you to load your model from transformers library as usual way.
-
-```sh
->>> import transformers
->>> transformers.AutoTokenizer.from_pretrained("model")
->>> transformers.AutoModelForCausalLM.from_pretrained("model")
-```
+### Upload to 🤗 Model Hub
