@@ -5,7 +5,7 @@ This repository is for GPT-2 Japanese model trained on Japanese Wikipedia datase
 Model details are as follows. Please check out more details of each model from each document in Model Hub.
 
 | Model in 🤗 Model Hub| n_ctx | n_layer | n_head | n_embd |
-| --- | --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | [gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | 1024 | 12 | 12 | 768 |
 
 Simple usage;
