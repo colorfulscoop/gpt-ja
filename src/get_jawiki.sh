@@ -44,4 +44,3 @@ cat jawiki-${date}-pages-articles.extractor | \
     head -n500000   all.txt                  >valid.txt
     head -n1000000  all.txt | tail -n+500001 >test.txt
     tail -n+1000001 all.txt                  >train.txt
-fi
