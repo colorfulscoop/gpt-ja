@@ -48,7 +48,8 @@ class PLGPT2LMHeadModel(pl.LightningModule):
                 cls_token_id=tokenizer.cls_token_id,
                 unk_token_id=tokenizer.unk_token_id,
                 #
-                n_layer=n_layer, n_head=n_head, n_embd=n_embd
+                n_layer=n_layer, n_head=n_head, n_embd=n_embd,
+                n_ctx=block_size,
             )
             model = transformers.GPT2LMHeadModel(config)
 
@@ -96,7 +97,7 @@ class PLGPT2LMHeadModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         src, tgt = batch["input_ids"], batch["labels"]
         loss = self(self.model, self._config.pad_token_id, src, tgt)
-        self.log('train_loss', loss)
+        self.log('train_loss', loss.item())
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -109,7 +110,7 @@ class PLGPT2LMHeadModel(pl.LightningModule):
 
     def validation_epoch_end(self, validation_step_outputs):
         val_loss = sum(validation_step_outputs) / len(validation_step_outputs)
-        self.log("val_loss", val_loss)
+        self.log("val_loss", val_loss.item())
 
     def test_step(self, batch, batch_idx):
         """
@@ -121,10 +122,10 @@ class PLGPT2LMHeadModel(pl.LightningModule):
 
     def test_epoch_end(self, test_step_outputs):
         test_loss = sum(test_step_outputs) / len(test_step_outputs)
-        self.log("test_loss", test_loss)
+        self.log("test_loss", test_loss.item())
 
         test_ppl = torch.exp(test_loss)
-        self.log("test_ppl", test_ppl)
+        self.log("test_ppl", test_ppl.item())
 
     def train_dataloader(self):
         # Load data

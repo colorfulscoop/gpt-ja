@@ -19,7 +19,7 @@ class BlockDataset(torch.utils.data.IterableDataset):
         """
         return cls(
             generator=lambda: texts,
-            tokenizer=tokenizer.encode,
+            encode_fn=tokenizer.encode,
             block_size=block_size
         )
 
@@ -27,7 +27,7 @@ class BlockDataset(torch.utils.data.IterableDataset):
     def from_file(cls, filename, tokenizer, block_size):
         return cls(
             generator=lambda: (line.strip("\n") for line in open(filename)),
-            tokenizer=tokenizer.encode,
+            encode_fn=tokenizer.encode,
             block_size=block_size
         )
 
