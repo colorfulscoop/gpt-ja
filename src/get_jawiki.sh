@@ -33,15 +33,15 @@ if [ ! -e ${out_dir} ]; then
     cat ${out_dir}/AA/* >jawiki-${date}-pages-articles.extractor
 fi
 
-echo "Generate train/valid/test dataset in ${target_dir}"
+echo "Generate train/valid/test dataset in ${save_dir}"
 # Generate train/valid/test data
 # [Caution] do not shuffle dataset here for train GPT like dataset.
 cat jawiki-${date}-pages-articles.extractor | \
     grep -v doc | perl -wlp -e 's/。/。\n/g' | \
     perl -wln -e '/^$/ or print' \
-    >${target_dir}/all.txt
+    >${save_dir}/all.txt
 
-    head -n500000   ${target_dir}/all.txt                  >${target_dir}/data/valid.txt
-    head -n1000000  ${target_dir}/all.txt | tail -n+500001 >${target_dir}/data/test.txt
-    tail -n+1000001 ${target_dir}/all.txt                  >${target_dir}/data/train.txt
+    head -n500000   ${save_dir}/all.txt                  >${save_dir}/data/valid.txt
+    head -n1000000  ${save_dir}/all.txt | tail -n+500001 >${save_dir}/data/test.txt
+    tail -n+1000001 ${save_dir}/all.txt                  >${save_dir}/data/train.txt
 fi
