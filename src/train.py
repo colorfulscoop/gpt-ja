@@ -169,7 +169,7 @@ def train(
             # メモリを大量に消費してしまう
 
             # ログの出力
-            if train_batch_idx % (100*config.accumulation_steps) == 0:
+            if config.log_steps * (train_batch_idx % config.accumulation_steps) == 0:
                 batch_log = dict(
                     epoch=epoch,
                     batch=train_batch_idx,
@@ -227,6 +227,7 @@ class TrainConfig(pydantic.BaseModel):
     use_amp: bool = False
     accumulation_steps: int = 1
     show_progress_bar: bool = False
+    log_steps: int = 100
 
 
 class Trainer:
