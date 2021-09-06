@@ -282,11 +282,11 @@ class Trainer:
         optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
 
         # Scheduler
-        if config.steps:
+        if config.training_steps:
             scheduler = transformers.get_linear_schedule_with_warmup(
                 optimizer=optimizer,
                 num_warmup_steps=config.warmup_steps,
-                num_training_steps=config.steps
+                num_training_steps=config.training_steps
             )
         else:
             scheduler = transformers.get_constant_schedule_with_warmup(
