@@ -204,6 +204,7 @@ class TrainConfig(pydantic.BaseModel):
     tokenizer_model: str
     train_file: str
     valid_file: str
+    output_path: str
 
     # [Model config]
     # for small
@@ -306,6 +307,9 @@ class Trainer:
             valid_dataloader=valid_dataloader,
             device=device
         )
+
+        model.save_pretrained(config.output_path)
+        tokenizer.save_pretrained(config.output_path)
 
 
 if __name__ == "__main__":
