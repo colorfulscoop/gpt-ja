@@ -164,6 +164,7 @@ def train(
                 batch_log = dict(
                     epoch=epoch,
                     batch=train_batch_idx,
+                    step=train_batch_idx / config.accumulation_steps,
                     train_loss=loss.item(),
                     lr=optimizer.param_groups[0]['lr'],
                 )
