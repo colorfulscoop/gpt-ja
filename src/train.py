@@ -141,14 +141,18 @@ def train(
             # forward 関数は、検証時にも利用するため別の関数で後で定義する
             with torch.cuda.amp.autocast(enabled=config.use_amp):
                 loss = forward(model, item, loss_fn, device)
-            # [*2] 勾配の初期化Go
-            optimizer.zero_grad()
+                loss = loss / config.accumulation_steps
+
             # 勾配を計算し、その結果をテンソルの.gradに保存する
             scaler.scale(loss).backward()
-            # 勾配に従ってオプティマイザに登録したパラメータ (required_grad=Trueのテンソル) を更新
-            scaler.step(optimizer)
-            scaler.update()
-            scheduler.step()
+
+            if train_batch_idx % config.accumulation_steps == 0:
+                # 勾配に従ってオプティマイザに登録したパラメータ (required_grad=Trueのテンソル) を更新
+                scaler.step(optimizer)
+                scaler.update()
+                scheduler.step()
+                # [*2] 勾配の初期化Go
+                optimizer.zero_grad()
 
             # エポックのロス計算は、勾配計算を行わないため計算グラフを構築する必要はない。
             # 計算グラフを構築しないために item を使ってテンソルの中身を取り出して計算している。
@@ -211,6 +215,7 @@ class TrainConfig(pydantic.BaseModel):
     warmup_steps: int = 0
     steps: Optional[int] = None
     use_amp: bool = False
+    accumulation_steps: int = 1
 
 
 class Trainer:
