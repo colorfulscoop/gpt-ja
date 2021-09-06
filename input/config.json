@@ -1,0 +1,11 @@
+{
+  "output_path": "model",
+  "tokenizer_model": "colorfulscoop/gpt2-small-ja",
+  "train_file": "input/train.txt",
+  "valid_file": "input/valid.txt",
+  "epochs": 10,
+  "shuffle_buffer_size": 100000,
+  "warmup_steps": 10000,
+  "use_amp": true,
+  "accumulation_steps": 16
+}

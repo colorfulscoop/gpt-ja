@@ -1,9 +1,9 @@
-from re import M
 import torch
 import pydantic
 from typing import Optional
 import transformers
 import tqdm
+import json
 
 
 class BlockDataset(torch.utils.data.IterableDataset):
@@ -232,7 +232,8 @@ class TrainConfig(pydantic.BaseModel):
 
 
 class Trainer:
-    def train(self, **train_args):
+    def train(self, config):
+        train_args = json.loads(open(config))
         config = TrainConfig(**train_args)
 
         # Define device
