@@ -128,6 +128,9 @@ def train(
     device
 ):
     model.to(device=device)
+
+    # Setup scaler for SMP
+    # Please refer to https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html
     scaler = torch.cuda.amp.GradScaler(enabled=config.use_amp)
 
     for epoch in range(1, config.n_epochs+1):
@@ -146,6 +149,7 @@ def train(
             # 勾配に従ってオプティマイザに登録したパラメータ (required_grad=Trueのテンソル) を更新
             scaler.step(optimizer)
             scaler.update()
+            scheduler.step()
 
             # エポックのロス計算は、勾配計算を行わないため計算グラフを構築する必要はない。
             # 計算グラフを構築しないために item を使ってテンソルの中身を取り出して計算している。
@@ -207,8 +211,6 @@ class TrainConfig(pydantic.BaseModel):
     num_warmup_steps: int = 0
     num_training_steps: Optional[int] = None
     use_amp: bool = False
-
-
 
 
 class Trainer:
