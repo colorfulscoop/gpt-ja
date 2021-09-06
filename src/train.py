@@ -160,7 +160,7 @@ def train(
             # メモリを大量に消費してしまう
 
             # ログの出力
-            if train_batch_idx % 100 == 0:
+            if train_batch_idx % (100*config.accumulation_steps) == 0:
                 batch_log = dict(
                     epoch=epoch,
                     batch=train_batch_idx,
