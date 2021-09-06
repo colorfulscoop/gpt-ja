@@ -91,7 +91,6 @@ def build_dataloader(
     return loader
 
 
-
 def forward(model, item, loss_fn, device):
     """1バッチ毎のロスの計算を行う。
 
@@ -133,7 +132,7 @@ def train(
     # Please refer to https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html
     scaler = torch.cuda.amp.GradScaler(enabled=config.use_amp)
 
-    for epoch in range(1, config.n_epochs+1):
+    for epoch in range(1, config.epochs+1):
         # [*1] 学習モード
         model.train()
 
@@ -203,14 +202,14 @@ class TrainConfig(pydantic.BaseModel):
     # for XL     -> n_layer=48, n_head=24, n_embd=6400
 
     # [Training options]
-    n_epochs: int = 1
+    epochs: int = 1
     batch_size: int = 2
     prefetch_factor: int = 10
-    num_workers: int = 1
+    workers: int = 1
     shuffle_buffer_size: int = 1000
     lr: float = 1e-4
-    num_warmup_steps: int = 0
-    num_training_steps: Optional[int] = None
+    warmup_steps: int = 0
+    steps: Optional[int] = None
     use_amp: bool = False
 
 
@@ -249,7 +248,7 @@ class Trainer:
             batch_size=config.batch_size,
             shuffle_buffer_size=config.shuffle_buffer_size,
             prefetch_factor=config.prefetch_factor,
-            num_workers=config.num_workers,
+            num_workers=config.workers,
         )
         valid_dataloader = build_dataloader(
             filename=config.train_file,
@@ -258,23 +257,23 @@ class Trainer:
             batch_size=config.batch_size,
             shuffle_buffer_size=config.shuffle_buffer_size,
             prefetch_factor=config.prefetch_factor,
-            num_workers=config.num_workers,
+            num_workers=config.workers,
         )
 
         # Optimizer
         optimizer = torch.optim.Adam(model.parameters(), lr=config.lr)
 
         # Scheduler
-        if config.num_training_steps:
+        if config.steps:
             scheduler = transformers.get_linear_schedule_with_warmup(
                 optimizer=optimizer,
-                num_warmup_steps=config.num_warmup_steps,
-                num_training_steps=config.num_training_steps
+                num_warmup_steps=config.warmup_steps,
+                num_training_steps=config.steps
             )
         else:
             scheduler = transformers.get_constant_schedule_with_warmup(
                 optimizer=optimizer,
-                num_warmup_steps=config.num_warmup_steps,
+                num_warmup_steps=config.warmup_steps,
             )
 
         # Loss function
