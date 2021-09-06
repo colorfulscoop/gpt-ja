@@ -1,3 +1,4 @@
+from re import M
 import torch
 import pydantic
 from typing import Optional
@@ -115,34 +116,6 @@ def forward(model, item, loss_fn, device):
     return loss
 
 
-class Config(pydantic.BaseModel):
-    # Required parameters
-    tokenizer_model: str
-    train_file: str
-    valid_file: str
-    test_file: str
-
-    # [Model config]
-    # for small
-    n_ctx: int = 1024
-    n_layer: int = 12
-    n_head: int = 12
-    n_embd: int = 768
-    # for medium -> n_layer=24, n_head=16, n_embd=1024
-    # for large  -> n_layer=36, n_head=20, n_embd=5120
-    # for XL     -> n_layer=48, n_head=24, n_embd=6400
-
-    # [Training options]
-    n_epochs: int = 1
-    batch_size: int = 2
-    prefetch_factor: int = 10
-    num_workers: int = 1
-    shuffle_buffer_size: int = 1000
-    lr: float = 1e-4
-    num_warmup_steps: int = 0
-    num_training_steps: Optional[int] = None
-    use_amp: bool = False
-
 
 def train(
     config,
@@ -154,6 +127,7 @@ def train(
     valid_dataloader,
     device
 ):
+    model.to(device=device)
     scaler = torch.cuda.amp.GradScaler(enabled=config.use_amp)
 
     for epoch in range(1, config.n_epochs+1):
@@ -207,9 +181,39 @@ def train(
         print(epoch_log)
 
 
+class TrainConfig(pydantic.BaseModel):
+    # Required parameters
+    tokenizer_model: str
+    train_file: str
+    valid_file: str
+
+    # [Model config]
+    # for small
+    n_ctx: int = 1024
+    n_layer: int = 12
+    n_head: int = 12
+    n_embd: int = 768
+    # for medium -> n_layer=24, n_head=16, n_embd=1024
+    # for large  -> n_layer=36, n_head=20, n_embd=5120
+    # for XL     -> n_layer=48, n_head=24, n_embd=6400
+
+    # [Training options]
+    n_epochs: int = 1
+    batch_size: int = 2
+    prefetch_factor: int = 10
+    num_workers: int = 1
+    shuffle_buffer_size: int = 1000
+    lr: float = 1e-4
+    num_warmup_steps: int = 0
+    num_training_steps: Optional[int] = None
+    use_amp: bool = False
+
+
+
+
 class Trainer:
     def train(self, **train_args):
-        config = Config(**train_args)
+        config = TrainConfig(**train_args)
 
         # Define device
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
