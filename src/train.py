@@ -136,6 +136,9 @@ def train(
     # Please refer to https://pytorch.org/tutorials/recipes/recipes/amp_recipe.html
     scaler = torch.cuda.amp.GradScaler(enabled=config.use_amp)
 
+    # variables to use in log
+    num_steps = 0
+
     for epoch in range(1, config.epochs+1):
         # [*1] 学習モード
         model.train()
@@ -158,6 +161,8 @@ def train(
                 # [*2] 勾配の初期化Go
                 optimizer.zero_grad()
 
+                num_steps += 1
+
             # エポックのロス計算は、勾配計算を行わないため計算グラフを構築する必要はない。
             # 計算グラフを構築しないために item を使ってテンソルの中身を取り出して計算している。
             # item を使わないと計算グラフをバッチのループ毎に作り続けそれを train_loss にキープし続けるため、
@@ -168,7 +173,7 @@ def train(
                 batch_log = dict(
                     epoch=epoch,
                     batch=train_batch_idx,
-                    step=train_batch_idx / config.accumulation_steps,
+                    step=num_steps,
                     train_loss=loss.item(),
                     lr=optimizer.param_groups[0]['lr'],
                 )
