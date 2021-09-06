@@ -115,7 +115,7 @@ def forward(model, item, loss_fn, device):
     return loss
 
 
-class Config(pydantic):
+class Config(pydantic.BaseModel):
     # Required parameters
     tokenizer_model: str
     train_file: str
