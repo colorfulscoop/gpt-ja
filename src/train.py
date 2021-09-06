@@ -3,6 +3,7 @@ import torch
 import pydantic
 from typing import Optional
 import transformers
+import tqdm
 
 
 class BlockDataset(torch.utils.data.IterableDataset):
@@ -116,7 +117,6 @@ def forward(model, item, loss_fn, device):
     return loss
 
 
-
 def train(
     config,
     model,
@@ -137,7 +137,7 @@ def train(
         # [*1] 学習モード
         model.train()
 
-        for train_batch_idx, item in enumerate(train_dataloader, start=1):
+        for train_batch_idx, item in tqdm.tqdm(enumerate(train_dataloader, start=1)):
             # ロスの計算グラフを構築する
             # forward 関数は、検証時にも利用するため別の関数で後で定義する
             with torch.cuda.amp.autocast(enabled=config.use_amp):
@@ -161,7 +161,8 @@ def train(
                 batch_log = dict(
                     epoch=epoch,
                     batch=train_batch_idx,
-                    train_loss=loss.item()
+                    train_loss=loss.item(),
+                    lr=optimizer.param_groups[0]['lr'],
                 )
                 print(batch_log)
 
@@ -280,7 +281,10 @@ class Trainer:
         loss_fn = torch.nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
 
         train(
-            config=config, model=model, optimizer=optimizer, scheduler=scheduler,
+            config=config,
+            model=model,
+            optimizer=optimizer,
+            scheduler=scheduler,
             loss_fn=loss_fn,
             train_dataloader=train_dataloader,
             valid_dataloader=valid_dataloader,
