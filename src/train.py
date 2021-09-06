@@ -227,7 +227,7 @@ class TrainConfig(pydantic.BaseModel):
     training_steps: Optional[int] = None
     use_amp: bool = False
     accumulation_steps: int = 1
-    show_progress_bar: bool = False
+    show_progress_bar: bool = True
     log_steps: int = 100
 
 
