@@ -234,7 +234,7 @@ class TrainConfig(pydantic.BaseModel):
 class Trainer:
     def train(self, config):
         train_args = json.load(open(config))
-        config = TrainConfig(**train_args)
+        config = TrainConfig.parse_raw(train_args)
 
         # Define device
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
