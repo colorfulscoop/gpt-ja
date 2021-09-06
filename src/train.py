@@ -116,6 +116,10 @@ def forward(model, item, loss_fn, device):
     return loss
 
 
+def progress_bar(seq, show: bool):
+    return tqdm.tqdm(seq) if show else seq
+
+
 def train(
     config,
     model,
@@ -136,7 +140,7 @@ def train(
         # [*1] 学習モード
         model.train()
 
-        for train_batch_idx, item in tqdm.tqdm(enumerate(train_dataloader, start=1)):
+        for train_batch_idx, item in progress_bar(enumerate(train_dataloader, start=1), show=config.show_progress_bar):
             # ロスの計算グラフを構築する
             # forward 関数は、検証時にも利用するため別の関数で後で定義する
             with torch.cuda.amp.autocast(enabled=config.use_amp):
@@ -217,6 +221,7 @@ class TrainConfig(pydantic.BaseModel):
     steps: Optional[int] = None
     use_amp: bool = False
     accumulation_steps: int = 1
+    show_progress_bar: bool = False
 
 
 class Trainer:
