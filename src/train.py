@@ -233,7 +233,7 @@ class TrainConfig(pydantic.BaseModel):
 
 class Trainer:
     def train(self, config):
-        train_args = json.load(open(config))
+        train_args = json.loads(open(config).read())
         config = TrainConfig.parse_raw(train_args)
 
         # Define device
