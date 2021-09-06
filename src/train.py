@@ -1,6 +1,6 @@
 import torch
 import pydantic
-from pydantic import Optional
+from typing import Optional
 import transformers
 
 
