@@ -208,7 +208,7 @@ def train(
 
 
 class Trainer:
-    def train(**train_args):
+    def train(self, **train_args):
         config = Config(**train_args)
 
         # Define device
