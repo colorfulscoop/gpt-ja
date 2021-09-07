@@ -3,7 +3,8 @@ import pydantic
 from typing import Optional
 import transformers
 import tqdm
-import json
+import numpy as np
+import random
 
 
 class BlockDataset(torch.utils.data.IterableDataset):
@@ -229,11 +230,28 @@ class TrainConfig(pydantic.BaseModel):
     accumulation_steps: int = 1
     show_progress_bar: bool = True
     log_steps: int = 100
+    seed: Optional[int] = None
+    deterministic: bool = False
+
+
+def set_reproducibility(seed: int = None, deterministic: bool = False):
+    """
+    Refer to the document for details
+    https://pytorch.org/docs/stable/notes/randomness.html
+    """
+    if seed:
+        torch.manual_seed(seed)
+        random.seed(seed)
+        np.random.seed(seed)
+    torch.use_deterministic_algorithms(deterministic)
 
 
 class Trainer:
     def train(self, config):
         config = TrainConfig.parse_file(config)
+
+        # Set Reproducibility
+        set_reproducibility(seed=config.seed, deterministic=config.deterministic)
 
         # Define device
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
