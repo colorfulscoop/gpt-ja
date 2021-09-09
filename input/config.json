@@ -9,5 +9,6 @@
   "use_amp": true,
   "accumulation_steps": 16,
   "seed": 1000,
-  "deterministic": false
+  "deterministic": false,
+  "log_steps": 1000
 }

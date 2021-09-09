@@ -7,32 +7,29 @@ import numpy as np
 import random
 
 
+class FileIterator:
+    def __init__(self, filename):
+        self._filename = filename
+
+    def __iter__(self):
+        with open(self._filename) as fd:
+            for line in fd:
+                yield line.strip("\n")
+
+
 class BlockDataset(torch.utils.data.IterableDataset):
-    def __init__(self, generator, tokenizer, block_size, drop_last=True):
+    def __init__(self, iterator, tokenizer, block_size, drop_last=True):
         super().__init__()
         self._tokenizer = tokenizer
         self._block_size = block_size
-        self._generator = generator
+        self._iterator = iterator
         self._drop_last = drop_last
 
     @classmethod
-    def from_texts(cls, texts, tokenizer, block_size):
-        """
-        Args:
-            tokenizer (transformers.AutoTokenizer)
-            texts (List[str])
-            block_size (int)
-        """
-        return cls(
-            generator=lambda: texts,
-            tokenizer=tokenizer,
-            block_size=block_size
-        )
-
-    @classmethod
     def from_file(cls, filename, tokenizer, block_size):
+        iterator = FileIterator(filename=filename)
         return cls(
-            generator=lambda: (line.strip("\n") for line in open(filename)),
+            iterator=iterator,
             tokenizer=tokenizer,
             block_size=block_size
         )
@@ -42,7 +39,7 @@ class BlockDataset(torch.utils.data.IterableDataset):
             Yields (List[int])
         """
         ids = []
-        for text in self._generator():
+        for text in self._iterator:
             ids.extend(self._tokenizer.encode(text))
             while len(ids) >= self._block_size+1:
                 yield {"input_ids": ids[:self._block_size],
@@ -186,7 +183,7 @@ def train(
         #      `torch.no_grad()` コンテキスト内のテンソルの計算では計算グラフは構築されない。
         with torch.no_grad():
             val_loss = 0
-            for val_batch_idx, item in enumerate(valid_dataloader, start=1):
+            for val_batch_idx, item in progress_bar(enumerate(valid_dataloader, start=1), show=config.show_progress_bar):
                 loss = forward(model, item, loss_fn, device)
                 val_loss += loss.item()
 
@@ -287,7 +284,7 @@ class Trainer:
             num_workers=config.workers,
         )
         valid_dataloader = build_dataloader(
-            filename=config.train_file,
+            filename=config.valid_file,
             block_size=config.n_ctx,
             tokenizer=tokenizer,
             batch_size=config.batch_size,
