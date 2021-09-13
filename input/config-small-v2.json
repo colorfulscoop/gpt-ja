@@ -7,7 +7,7 @@
   "n_layer": 12,
   "n_head": 12,
   "n_embd": 768,
-  "epochs": 10,
+  "epochs": 30,
   "batch_size": 2,
   "prefetch_factor": 10,
   "workers": 1,
@@ -20,5 +20,6 @@
   "show_progress_bar": true,
   "log_steps": 1000,
   "seed": 1000,
-  "deterministic": false
+  "deterministic": false,
+  "save_best_model": true
 }

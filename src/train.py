@@ -121,6 +121,7 @@ def progress_bar(seq, show: bool):
 def train(
     config,
     model,
+    tokenizer,
     optimizer,
     scheduler,
     loss_fn,
@@ -136,6 +137,9 @@ def train(
 
     # variables to use in log
     num_steps = 0
+
+    # keep best model loss
+    best_val_loss = float("infinity")
 
     for epoch in range(1, config.epochs+1):
         # [*1] 学習モード
@@ -190,9 +194,25 @@ def train(
                 # 次の行の assert で計算グラフが構築されていないことが確認できる。
                 # assert loss.grad is None
 
+        # Update best validation loss
+        val_loss_per_batch = val_loss/val_batch_idx
+        save_model = False
+
+        if val_loss_per_batch < best_val_loss:
+            best_val_loss = val_loss_per_batch
+            if config.save_best_model:
+                save_model = True
+        if not config.save_best_model:
+            # Save model everytime if save_best_model is set to False
+            save_model = True
+        if save_model:
+            model.save_pretrained(config.output_path)
+            tokenizer.save_pretrained(config.output_path)
+
         epoch_log = dict(
             epoch=epoch,
-            valid_loss=val_loss/val_batch_idx,
+            valid_loss=val_loss_per_batch,
+            save_model=save_model,
         )
         print(epoch_log)
 
@@ -229,6 +249,7 @@ class TrainConfig(pydantic.BaseModel):
     log_steps: int = 100
     seed: Optional[int] = None
     deterministic: bool = False
+    save_best_model: bool = True
 
 
 def set_reproducibility(seed: int = None, deterministic: bool = False):
@@ -315,16 +336,14 @@ class Trainer:
         train(
             config=config,
             model=model,
+            tokenizer=tokenizer,
             optimizer=optimizer,
             scheduler=scheduler,
             loss_fn=loss_fn,
             train_dataloader=train_dataloader,
             valid_dataloader=valid_dataloader,
-            device=device
+            device=device,
         )
-
-        model.save_pretrained(config.output_path)
-        tokenizer.save_pretrained(config.output_path)
 
 
 if __name__ == "__main__":
