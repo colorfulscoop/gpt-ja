@@ -29,7 +29,7 @@ fi
 
 out_dir=out-${date}
 if [ ! -e ${out_dir} ]; then
-    python wikiextractor/WikiExtractor.py -b 500M --processes 2 --log_file log-${date}.txt -o ${out_dir} ${target}.xml.bz2
+    python3 wikiextractor/WikiExtractor.py -b 500M --processes 2 --log_file log-${date}.txt -o ${out_dir} ${target}.xml.bz2
     cat ${out_dir}/AA/* >jawiki-${date}-pages-articles.extractor
 fi
 
