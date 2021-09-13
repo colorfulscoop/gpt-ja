@@ -4,6 +4,7 @@ from typing import Optional
 import transformers
 import tqdm
 import numpy as np
+import math
 import random
 
 
@@ -212,7 +213,7 @@ def train(
         epoch_log = dict(
             epoch=epoch,
             valid_loss=val_loss_per_batch,
-            valid_ppl=torch.exp(val_loss_per_batch),
+            valid_ppl=math.exp(val_loss_per_batch),
             save_model=save_model,
         )
         print(epoch_log)
