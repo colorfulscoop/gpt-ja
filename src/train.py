@@ -1,8 +1,9 @@
 import torch
 import pydantic
-from typing import Optional
+from typing import Optional, List, Any
 import transformers
 import tqdm
+import json
 import numpy as np
 import math
 import random
@@ -219,22 +220,26 @@ def train(
         print(epoch_log)
 
 
+def set_reproducibility(seed: int = None, deterministic: bool = False):
+    """
+    Refer to the document for details
+    https://pytorch.org/docs/stable/notes/randomness.html
+    """
+    if seed:
+        torch.manual_seed(seed)
+        random.seed(seed)
+        np.random.seed(seed)
+    torch.use_deterministic_algorithms(deterministic)
+
+
 class TrainConfig(pydantic.BaseModel):
+    model_type: str
+
     # Required parameters
     tokenizer_model: str
     train_file: str
     valid_file: str
     output_path: str
-
-    # [Model config]
-    # for small
-    n_ctx: int = 1024
-    n_layer: int = 12
-    n_head: int = 12
-    n_embd: int = 768
-    # for medium -> n_layer=24, n_head=16, n_embd=1024
-    # for large  -> n_layer=36, n_head=20, n_embd=5120
-    # for XL     -> n_layer=48, n_head=24, n_embd=6400
 
     # [Training options]
     epochs: int = 1
@@ -254,32 +259,47 @@ class TrainConfig(pydantic.BaseModel):
     save_best_model: bool = True
 
 
-def set_reproducibility(seed: int = None, deterministic: bool = False):
-    """
-    Refer to the document for details
-    https://pytorch.org/docs/stable/notes/randomness.html
-    """
-    if seed:
-        torch.manual_seed(seed)
-        random.seed(seed)
-        np.random.seed(seed)
-    torch.use_deterministic_algorithms(deterministic)
+class GPT2TrainConfig(TrainConfig):
+    # [Model config]
+    # for small
+    n_ctx: int = 1024
+    n_layer: int = 12
+    n_head: int = 12
+    n_embd: int = 768
+    # for medium -> n_layer=24, n_head=16, n_embd=1024
+    # for large  -> n_layer=36, n_head=20, n_embd=5120
+    # for XL     -> n_layer=48, n_head=24, n_embd=6400
 
 
-class Trainer:
-    def train(self, config):
-        config = TrainConfig.parse_file(config)
+class GPTNeoTrainConfig(TrainConfig):
+    # [Model config]
+    # for small
+    attention_types: List[Any] = [[[["global", "local"], 6]]]
+    hidden_size: int = 768
+    num_layers: int = 12
+    num_heads: int = 12
+    intermediate_size: Optional[int] = None
+    max_position_embeddings: int = 1024
 
-        # Set Reproducibility
-        set_reproducibility(seed=config.seed, deterministic=config.deterministic)
 
-        # Define device
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+def load_config(config_file):
+    json_dic = json.load(open(config_file))
+    model_type = json_dic["model_type"]
+    assert model_type in ["gpt2", "gpt_neo"]
 
-        # Load pretrained tokenizer
-        tokenizer = transformers.AutoTokenizer.from_pretrained(config.tokenizer_model)
+    if model_type == "gpt2":
+        model_cls = GPT2TrainConfig
+    elif model_type == "gpt_neo":
+        model_cls = GPTNeoTrainConfig
 
-        # Prepare model
+    config = model_cls.parse_file(config_file)
+    return config
+
+
+def init_model(config, tokenizer):
+    model_type = config.model_type
+
+    if model_type == "gpt2":
         model_config = transformers.GPT2Config(
             vocab_size=len(tokenizer),
             tokenizer_class=tokenizer.__class__.__name__,
@@ -295,11 +315,50 @@ class Trainer:
             n_ctx=config.n_ctx,
         )
         model = transformers.GPT2LMHeadModel(model_config)
+        block_size = config.n_ctx
+    elif model_type == "gpt_neo":
+        model_config = transformers.GPTNeoConfig(
+            vocab_size=len(tokenizer),
+            tokenizer_class=tokenizer.__class__.__name__,
+            bos_token_id=tokenizer.bos_token_id,
+            pad_token_id=tokenizer.pad_token_id,
+            eos_token_id=tokenizer.eos_token_id,
+            sep_token_id=tokenizer.sep_token_id,
+            cls_token_id=tokenizer.cls_token_id,
+            unk_token_id=tokenizer.unk_token_id,
+            attention_types=config.attention_types,
+            hidden_size=config.hidden_size,
+            num_layers=config.num_layers,
+            num_heads=config.num_heads,
+            intermediate_size=config.intermediate_size,
+            max_position_embeddings=config.max_position_embeddings,
+        )
+        model = transformers.GPTNeoForCausalLM(model_config)
+        block_size = config.max_position_embeddings
+
+    return model, block_size
+
+
+class Trainer:
+    def train(self, config):
+        config = load_config(config)
+
+        # Set Reproducibility
+        set_reproducibility(seed=config.seed, deterministic=config.deterministic)
+
+        # Define device
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        # Load pretrained tokenizer
+        tokenizer = transformers.AutoTokenizer.from_pretrained(config.tokenizer_model)
+
+        # Initialize model
+        model, block_size = init_model(config, tokenizer)
 
         # Load data
         train_dataloader = build_dataloader(
             filename=config.train_file,
-            block_size=config.n_ctx,
+            block_size=block_size,
             tokenizer=tokenizer,
             batch_size=config.batch_size,
             shuffle_buffer_size=config.shuffle_buffer_size,
@@ -308,7 +367,7 @@ class Trainer:
         )
         valid_dataloader = build_dataloader(
             filename=config.valid_file,
-            block_size=config.n_ctx,
+            block_size=block_size,
             tokenizer=tokenizer,
             batch_size=config.batch_size,
             shuffle_buffer_size=config.shuffle_buffer_size,
