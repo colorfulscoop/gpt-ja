@@ -236,10 +236,11 @@ class TrainConfig(pydantic.BaseModel):
     model_type: str
 
     # Required parameters
+    output_path: str
     tokenizer_model: str
     train_file: str
     valid_file: str
-    output_path: str
+    test_file: str
 
     # [Training options]
     epochs: int = 1
@@ -270,6 +271,8 @@ class GPT2TrainConfig(TrainConfig):
     # for large  -> n_layer=36, n_head=20, n_embd=5120
     # for XL     -> n_layer=48, n_head=24, n_embd=6400
 
+    block_size: int = 1024
+
 
 class GPTNeoTrainConfig(TrainConfig):
     # [Model config]
@@ -280,6 +283,8 @@ class GPTNeoTrainConfig(TrainConfig):
     num_heads: int = 12
     intermediate_size: Optional[int] = None
     max_position_embeddings: int = 1024
+
+    block_size: int = 1024
 
 
 def load_config(config_file):
@@ -315,7 +320,6 @@ def init_model(config, tokenizer):
             n_ctx=config.n_ctx,
         )
         model = transformers.GPT2LMHeadModel(model_config)
-        block_size = config.n_ctx
     elif model_type == "gpt_neo":
         model_config = transformers.GPTNeoConfig(
             vocab_size=len(tokenizer),
@@ -334,9 +338,8 @@ def init_model(config, tokenizer):
             max_position_embeddings=config.max_position_embeddings,
         )
         model = transformers.GPTNeoForCausalLM(model_config)
-        block_size = config.max_position_embeddings
 
-    return model, block_size
+    return model
 
 
 class Trainer:
@@ -353,12 +356,12 @@ class Trainer:
         tokenizer = transformers.AutoTokenizer.from_pretrained(config.tokenizer_model)
 
         # Initialize model
-        model, block_size = init_model(config, tokenizer)
+        model = init_model(config, tokenizer)
 
         # Load data
         train_dataloader = build_dataloader(
             filename=config.train_file,
-            block_size=block_size,
+            block_size=config.block_size,
             tokenizer=tokenizer,
             batch_size=config.batch_size,
             shuffle_buffer_size=config.shuffle_buffer_size,
@@ -367,7 +370,7 @@ class Trainer:
         )
         valid_dataloader = build_dataloader(
             filename=config.valid_file,
-            block_size=block_size,
+            block_size=config.block_size,
             tokenizer=tokenizer,
             batch_size=config.batch_size,
             shuffle_buffer_size=config.shuffle_buffer_size,
@@ -405,6 +408,45 @@ class Trainer:
             valid_dataloader=valid_dataloader,
             device=device,
         )
+
+    def test(self, config):
+        config = load_config(config)
+
+        # Define device
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        tokenizer = transformers.AutoTokenizer.from_pretrained(config.output_path)
+        model = transformers.AutoModelForCausalLM.from_pretrained(config.output_path)
+
+        # Load data
+        test_dataloader = build_dataloader(
+            filename=config.test_file,
+            block_size=config.block_size,
+            tokenizer=tokenizer,
+            batch_size=config.batch_size,
+            shuffle_buffer_size=None,
+            prefetch_factor=config.prefetch_factor,
+            num_workers=config.workers,
+        )
+
+        # Loss function
+        loss_fn = torch.nn.CrossEntropyLoss(ignore_index=tokenizer.pad_token_id)
+
+        model.to(device=device)
+        model.eval()
+
+        with torch.no_grad():
+            test_loss = 0
+            for batch_idx, item in progress_bar(enumerate(test_dataloader, start=1), show=config.show_progress_bar):
+                loss = forward(model, item, loss_fn, device)
+                test_loss += loss.item()
+
+        test_loss = test_loss / batch_idx
+        test_log = dict(
+            test_loss=test_loss,
+            test_ppl=math.exp(test_loss),
+        )
+        print(test_log)
 
 
 if __name__ == "__main__":
