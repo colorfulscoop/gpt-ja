@@ -198,15 +198,14 @@ def train(
 
         # Update best validation loss
         val_loss_per_batch = val_loss/val_batch_idx
-        save_model = False
+        save_model = True
 
         if val_loss_per_batch < best_val_loss:
             best_val_loss = val_loss_per_batch
+        else:
             if config.save_best_model:
-                save_model = True
-        if not config.save_best_model:
-            # Save model everytime if save_best_model is set to False
-            save_model = True
+                save_model = False
+
         if save_model:
             model.save_pretrained(config.output_path)
             tokenizer.save_pretrained(config.output_path)
