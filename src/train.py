@@ -372,7 +372,7 @@ class Trainer:
             block_size=config.block_size,
             tokenizer=tokenizer,
             batch_size=config.batch_size,
-            shuffle_buffer_size=config.shuffle_buffer_size,
+            shuffle_buffer_size=None,
             prefetch_factor=config.prefetch_factor,
             num_workers=config.workers,
         )
