@@ -31,10 +31,6 @@ Sample usage:
 [{'generated_text': '統計的機械学習でのニューラルネットワークの解析は、多くのアルゴリズムの完全な実装をもたらした。これらの'}]
 ```
 
-
-Although this repository is being maintained to make all the models work in the latest master branch,
-please check out the specific commit hash of training run to reproduce the result.
-
 ## Training details
 
 Training model was conducted on the following environment.
