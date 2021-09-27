@@ -1,21 +1,28 @@
-# GPT-2 Japanese model for 🤗 Transformers
+# GPT-based Japanese model for 🤗 Transformers
 
-This repository is for GPT-2 Japanese model trained on Japanese Wikipedia dataset.
+This repository is for GPT-based Japanese model trained on Japanese Wikipedia dataset.
 
-Model details are as follows. Please check out more details of each model from each document in Model Hub.
+Current support models are:
 
-| Model in 🤗 Model Hub| Total params | vocab_size | n_ctx | n_layer | n_head | n_embd |
-| --- | --- | --- | --- | --- | --- | --- |
-| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | 110M | 32,000 | 1,024 | 12 | 12 | 768 |
+* [GPT2]()
+* [GPT Neo](https://huggingface.co/transformers/model_doc/gpt_neo.html)
 
-Simple usage;
+Model summary:
 
-```sh
->>> import transformers
->>> transformers.pipeline(...)
-```
+| Model in 🤗 Model Hub | Revision | Data | Total params | vocab_size | n_ctx | n_layer | n_head | n_embd | Epochs | Test PPL | Training time |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | v20210820.1.0 | jawiki_20210820 | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | | 15 days |
 
-Following document shows how to reproduce model training.
+Data summary:
+
+| Id | Corpus | #tokens in train set | #tokens in valid set | #tokens in test set |
+| --- | --- | --- | --- | --- |
+| jawiki_20210820 | Japanese Wikipedia on 20210820 | 540M | 13M | |
+
+**Note:** a same tokenizer is used if models are trained on same data.
+
+Although this repository is being maintained to make all the models work in the latest master branch,
+please check out the specific commit hash of training run to reproduce the result.
 
 ## Training details
 
