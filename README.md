@@ -9,10 +9,10 @@ Current support models are:
 
 Model summary:
 
-| Model in 🤗 Model Hub | Data | Revision | Code | Total params | vocab_size | n_ctx | n_layer | n_head | n_embd | Epochs | Training time | Test set PPL |
+| Model in 🤗 Model Hub | Data | Revision | Code | Total params | Test set PPL | vocab_size | n_ctx | n_layer | n_head | n_embd | Epochs | Training time |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210820 | 20210820.1.0 | [ef927e1](https://github.com/colorfulscoop/gpt-ja/tree/ef927e1717dfb34c810c9227bbcfcf438f01be9d) | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | 15 days | 29.13 |
-| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210301 | 20210301.1.0 | - | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | - | - |
+| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210820 | 20210820.1.0 | [ef927e1](https://github.com/colorfulscoop/gpt-ja/tree/ef927e1717dfb34c810c9227bbcfcf438f01be9d) | 110M | 29.13 | 32,000 | 1,024 | 12 | 12 | 768 | 30 | 15 days |
+| | jawiki_20210301 | 20210301.1.0 | - | 110M | - | 32,000 | 1,024 | 12 | 12 | 768 | 30 | - |
 
 Data summary:
 
