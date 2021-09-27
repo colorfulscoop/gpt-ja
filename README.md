@@ -18,7 +18,7 @@ Data summary:
 
 | Id | Corpus | #tokens in train set | #tokens in valid set | #tokens in test set |
 | --- | --- | --- | --- | --- |
-| jawiki_20210820 | Japanese Wikipedia on 20210820 | 540M | 13M | |
+| jawiki_20210820 | Japanese Wikipedia on 20210820 | 540M | 13M | 13M |
 
 **Note:** a same tokenizer is used if models are trained on same data.
 
