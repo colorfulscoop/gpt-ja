@@ -11,7 +11,8 @@ Model summary:
 
 | Model in 🤗 Model Hub | Data | Revision | Code | Total params | vocab_size | n_ctx | n_layer | n_head | n_embd | Epochs | Training time | Test set PPL |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210820 | 20210820.1.0 | | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | 15 days | 29.13 |
+| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210820 | 20210820.1.0 | [ef927e1](https://github.com/colorfulscoop/gpt-ja/tree/ef927e1717dfb34c810c9227bbcfcf438f01be9d) | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | 15 days | 29.13 |
+| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210301 | 20210301.1.0 | - | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | - | - |
 
 Data summary:
 
@@ -65,13 +66,13 @@ Train SentencePiece model in the same container used in data peparation.
 (container)$ python3 src/train_tokenizer.py --train_file input/20210820/train.txt --model_dir models/gpt2-small
 ```
 
-
 ### Train model
 
 Run training with the config file:
 
 ```sh
 (container)$ python3 src/train.py train --config input/gpt2-small.json
+...
 255999it [10:21:51,  7.03it/s]{'epoch': 30, 'batch': 256000, 'step': 493108, 'train_loss': 0.190585415356369, 'lr': 0.0001}
 263236it [10:39:12,  6.86it/s]
 6788it [10:28, 10.81it/s]
@@ -86,7 +87,7 @@ Run training with the config file:
 {'test_loss': 3.371613106758486, 'test_ppl': 29.125471679484484}
 ```
 
-### Try
+### Try model
 
 ```py
 >>> import transformers
@@ -95,4 +96,66 @@ Run training with the config file:
 [{'generated_text': '統計的機械学習でのニューラルネットワークの解析は、多くのアルゴリズムの完全な実装をもたらした。これらの'}]
 ```
 
+### Export Tensorflow model
+
+```py
+(container)$ pip install tensorflow
+(container)$ python3
+>>> from transformers import TFGPT2LMHeadModel
+>>> model = TFGPT2LMHeadModel.from_pretrained("models/gpt2-small", from_pt=True)
+>>> model.save_pretrained("models/gpt2-small")
+```
+
 ### Upload to 🤗 Model Hub
+
+Follow [official document](https://huggingface.co/transformers/model_sharing.html) to upload model.
+
+#### Prepare environment
+
+Prepare git lfs. In a MacOS environment, git lfs can be installed as follows.
+
+```sh
+$ brew install git-lfs
+$ git lfs install
+Updated git hooks.
+Git LFS initialized.
+```
+
+Then clone the repository.
+
+```sh
+$ git clone https://huggingface.co/colorfulscoop/gpt2-small-ja release/gpt2-small-ja
+```
+
+#### Copy model to release directory
+
+```sh
+$ cp models/gpt2-small/* release/gpt2-small-ja/
+cp: models/gpt2-small/spm is a directory (not copied).
+$ cd release/gpt2-small-ja
+```
+
+Then, modify `config.json` to specify default generation values by following diff.
+
+```sh
+   "unk_token_id": 1,
+   "use_cache": true,
+-  "vocab_size": 32000
++  "vocab_size": 32000,
++  "top_k": 50,
++  "top_p": 0.95,
++  "do_sample": true
+ }
+```
+
+Commit changes to git.
+
+```sh
+$ git add .
+```
+
+#### Release
+
+```sh
+$ git push origin
+```
