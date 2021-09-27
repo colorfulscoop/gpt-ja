@@ -4,14 +4,14 @@ This repository is for GPT-based Japanese model trained on Japanese Wikipedia da
 
 Current support models are:
 
-* [GPT2]()
+* [GPT2](https://huggingface.co/transformers/model_doc/gpt2.html)
 * [GPT Neo](https://huggingface.co/transformers/model_doc/gpt_neo.html)
 
 Model summary:
 
-| Model in 🤗 Model Hub | Revision | Data | Total params | vocab_size | n_ctx | n_layer | n_head | n_embd | Epochs | Test PPL | Training time |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | v20210820.1.0 | jawiki_20210820 | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | | 15 days |
+| Model in 🤗 Model Hub | Data | Revision | Code | Total params | vocab_size | n_ctx | n_layer | n_head | n_embd | Epochs | Training time | Test set PPL |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| [colorfulscoop/gpt2-small-ja](https://hf.co/colorfulscoop/gpt2-small-ja) | jawiki_20210820 | 20210820.1.0 | | 110M | 32,000 | 1,024 | 12 | 12 | 768 | 30 | 15 days | 29.13 |
 
 Data summary:
 
@@ -62,7 +62,7 @@ input/20210820/valid.txt
 Train SentencePiece model in the same container used in data peparation.
 
 ```sh
-(container)$ python3 src/train_tokenizer.py --train_file input/20210820/train.txt --model_dir models/small-v2
+(container)$ python3 src/train_tokenizer.py --train_file input/20210820/train.txt --model_dir models/gpt2-small
 ```
 
 
@@ -71,17 +71,28 @@ Train SentencePiece model in the same container used in data peparation.
 Run training with the config file:
 
 ```sh
-(container)$ python3 src/train.py train --config input/config-small-v2.json
+(container)$ python3 src/train.py train --config input/gpt2-small.json
+255999it [10:21:51,  7.03it/s]{'epoch': 30, 'batch': 256000, 'step': 493108, 'train_loss': 0.190585415356369, 'lr': 0.0001}
+263236it [10:39:12,  6.86it/s]
+6788it [10:28, 10.81it/s]
+{'epoch': 30, 'valid_loss': 3.417723441833458, 'valid_ppl': 30.49990112587307, 'save_model': True}
 ```
 
 ### Test
 
-Once your model is trained, use `test.py` script to measure loss and PPL metrics.
-You can specify a config file and checkpoint which PyTorch Lightning automatically saves.
-
 ```sh
-$ python test.py --config lightning_logs/version_0/config.yaml --ckpt_path lightning_logs/version_0/checkpoints/epoch\=2-step\=8.ckpt
+(container)$ python3 src/train.py test --config input/gpt2-small.json
+6793it [09:16, 12.20it/s]
+{'test_loss': 3.371613106758486, 'test_ppl': 29.125471679484484}
+```
+
+### Try
+
+```py
+>>> import transformers
+>>> pipeline = transformers.pipeline("text-generation", "models/gpt2-small")
+>>> pipeline("統計的機械学習でのニューラルネットワーク", do_sample=True)
+[{'generated_text': '統計的機械学習でのニューラルネットワークの解析は、多くのアルゴリズムの完全な実装をもたらした。これらの'}]
 ```
 
 ### Upload to 🤗 Model Hub
-

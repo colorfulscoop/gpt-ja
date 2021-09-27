@@ -1,7 +1,7 @@
 {
   "model_type": "gpt2",
-  "output_path": "models/small-v2/",
-  "tokenizer_model": "models/small-v2/",
+  "output_path": "models/gpt2-small/",
+  "tokenizer_model": "models/gpt2-small/",
   "train_file": "input/20210820/train.txt",
   "valid_file": "input/20210820/valid.txt",
   "test_file": "input/20210820/test.txt",
