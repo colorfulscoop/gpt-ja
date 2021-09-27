@@ -22,6 +22,16 @@ Data summary:
 
 **Note:** a same tokenizer is used if models are trained on same data.
 
+Sample usage:
+
+```py
+>>> import transformers
+>>> pipeline = transformers.pipeline("text-generation", "models/gpt2-small", revision="20210820.1.0")
+>>> pipeline("統計的機械学習でのニューラルネットワーク", do_sample=True)
+[{'generated_text': '統計的機械学習でのニューラルネットワークの解析は、多くのアルゴリズムの完全な実装をもたらした。これらの'}]
+```
+
+
 Although this repository is being maintained to make all the models work in the latest master branch,
 please check out the specific commit hash of training run to reproduce the result.
 
@@ -87,14 +97,6 @@ Run training with the config file:
 {'test_loss': 3.371613106758486, 'test_ppl': 29.125471679484484}
 ```
 
-### Try model
-
-```py
->>> import transformers
->>> pipeline = transformers.pipeline("text-generation", "models/gpt2-small")
->>> pipeline("統計的機械学習でのニューラルネットワーク", do_sample=True)
-[{'generated_text': '統計的機械学習でのニューラルネットワークの解析は、多くのアルゴリズムの完全な実装をもたらした。これらの'}]
-```
 
 ### Export Tensorflow model
 
